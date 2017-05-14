@@ -1,0 +1,82 @@
+Create a sample dataset and implement the below Pig commands on the same
+dataset.
+1) Concat
+2) Tokenize
+3) Sum
+4) Min
+5) Max
+6) Limit
+7) Store
+8) Distinct
+9) Flatten
+10) IsEmpty
+
+grunt> student_details =  LOAD 'hdfs://localhost:9000/pig_data/pig_data_set.txt' Using PigStorage(',') as
+(name:chararray,col.undertaken:chararray,dob:chararray,stream:chararray,grade:float,state:chararray,city:chararray);
+
+
+1. Concat
+grunt> student_details_concat = foreach student_details Generate CONCAT (name,state);
+dump student_details_concat;
+
+2. Tokenize
+grunt> student_name_tokenize = foreach student_details  Generate TOKENIZE(name);
+dump student_name_tokenize
+
+3. Sum
+grunt> student_group = Group student_details All
+student_det_sum = foreach student_group Generate sum(student_details.grade);
+dump student_det_sum;
+
+4. Min
+grunt> student_group = Group student_details All
+min_student_mark = foreach student_group Generate min(grade);
+dump min_student_mark;
+
+5. Max
+grunt> student_group = Group student_details All
+max_student_mark = foreach student_group Generate max(grade);
+dump max_student_mark;
+
+6. Limit
+grunt> limit_data = LIMIT student_details 4; 
+dump limit_data;
+
+7. Store
+grunt> STORE student_details INTO 'hdfs://localhost:9000/pig_Output/' USING PigStorage (',');
+
+8. Distinct
+grunt> distinct_data = DISTINCT student_details;
+dump distinct_data;
+
+9. Flatten
+Example:
+From this:
+
+(1, {(1,2), (1,3), (1,4)} )
+(2, {(2,5), (2,6), (2,7)} )
+
+How could we generate this?
+
+(1,2,3,4)
+(2,5,6,7)
+
+r1 = load 'test_file' using PigStorage(',') as (a:int, b:int);
+r2 = group r1 by a;
+r3 = foreach r2 generate group as a, r1 as b;
+describe r3;
+-- r3: {a: int,b: {(a: int,b: int)}}
+-- r3 is like (1, {(1,2), (1,3), (1,4)} )
+
+r4 = foreach r3 generate a, FLATTEN(BagToTuple(b.b));
+dump r4;
+
+10. IsEmpty
+
+grunt> isempty_data = filter student_details by IsEmpty(name);
+dump isempty_data;
+
+
+
+
+ 
